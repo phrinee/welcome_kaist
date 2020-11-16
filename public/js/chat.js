@@ -33,49 +33,31 @@ const autoscroll = () => {
 
 }
 
+const createChat = (message, username, id) => {
+	var div = document.createElement("div")
+		div.className += "message" 
+		div.id = id
+		var p = document.createElement("p")
+		var name = document.createElement("span")
+		name.className += "message__name"
+		name.innerHTML = username
+		var created = document.createElement("span")
+		created.className += "message__meta"
+		created.innerHTML = moment(message.createdAt).format('h:mm a')
+		p.appendChild(name)
+		p.appendChild(created)
+		var mess = document.createElement("p")
+		mess.innerHTML = message.text
+		div.appendChild(p)
+		div.appendChild(mess)
+		$messages.appendChild(div)
+}
+
 socket.on('message', (message, username, roomname) => {
 	if (username != 'chatbot') {
-		var div = document.createElement("div")
-		div.className += "message" 
-		div.id = "request"
-		var p = document.createElement("p")
-		var name = document.createElement("span")
-		name.className += "message__name"
-		name.innerHTML = username
-		var created = document.createElement("span")
-		created.className += "message__meta"
-		created.innerHTML = moment(message.createdAt).format('h:mm a')
-		p.appendChild(name)
-		p.appendChild(created)
-		var mess = document.createElement("p")
-		mess.innerHTML = message.text
-		div.appendChild(p)
-		div.appendChild(mess)
-		$messages.appendChild(div)
-		// const html = Mustache.render(messageTemplate, {
-		// 	username: username,
-		// 	message: message.text,
-		// 	createdAt: moment(message.createdAt).format('h:mm a'),
-		// })
-		// $messages.appendChild(html)
+		createChat(message, username, "request")
 	} else {
-		var div = document.createElement("div")
-		div.className += "message" 
-		div.id = "response"
-		var p = document.createElement("p")
-		var name = document.createElement("span")
-		name.className += "message__name"
-		name.innerHTML = username
-		var created = document.createElement("span")
-		created.className += "message__meta"
-		created.innerHTML = moment(message.createdAt).format('h:mm a')
-		p.appendChild(name)
-		p.appendChild(created)
-		var mess = document.createElement("p")
-		mess.innerHTML = message.text
-		div.appendChild(p)
-		div.appendChild(mess)
-		$messages.appendChild(div)
+		createChat(message, username, "response")
 	}
 	
 	autoscroll() 
