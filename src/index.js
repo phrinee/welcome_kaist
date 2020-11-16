@@ -4,10 +4,9 @@ const path = require('path')
 const hbs = require('hbs')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
-const {generateMessage, generateLocation} = require('./utils/messages.js') 
+const {generateMessage} = require('./utils/messages.js') 
 const {addUser, removeUser, getUser, getUsersInRoom} = require('./utils/users.js')
 const {PythonShell} = require('python-shell')
-const { model } = require('mongoose')
 const { v4: uuidv4 } = require('uuid');
 
 const app = express()
