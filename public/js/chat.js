@@ -33,7 +33,7 @@ const autoscroll = () => {
 
 }
 
-const createChat = (message, username, id) => {
+const createChat = (message, username, id, keywords) => {
 	var div = document.createElement("div")
 		div.className += "message" 
 		div.id = id
@@ -46,18 +46,50 @@ const createChat = (message, username, id) => {
 		created.innerHTML = moment(message.createdAt).format('h:mm a')
 		p.appendChild(name)
 		p.appendChild(created)
-		var mess = document.createElement("p")
-		mess.innerHTML = message.text
-		div.appendChild(p)
-		div.appendChild(mess)
+		if (id == 'response') {
+			var mess = document.createElement("p")
+			mess.innerHTML = message.text
+			div.appendChild(p)
+			div.appendChild(mess)
+		} else {
+			div.appendChild(p)
+			tmp = message.text.toLowerCase()
+			map = new Map()
+			for (var i = 0; i < keywords.length; i++) {
+				let regexp = keywords[i]
+				let str = tmp
+
+				let matches = [...str.matchAll(regexp)];
+				matches.forEach((match) => {
+					map.set(match.index,regexp)
+				});
+			}
+			console.log(map)
+			let cur = 0
+			for (var i = 0; i < tmp.length; i++) {
+				if (map.has(cur) == true) {
+					var span = document.createElement('span');
+					span.innerHTML = message.text.substring(cur, map.get(cur).length+cur)
+					span.className = "popup_span"
+					cur += map.get(cur).length
+					div.appendChild(span)
+				} else {
+					div.appendChild(document.createTextNode(message.text[cur]))
+					cur += 1
+				}
+				if (cur == message.text.length) {
+					break
+				}
+			}
+		}
 		$messages.appendChild(div)
 }
 
-socket.on('message', (message, username, roomname) => {
+socket.on('message', (message, username, roomname, keywords) => {
 	if (username != 'chatbot') {
-		createChat(message, username, "request")
+		createChat(message, username, "request", keywords)
 	} else {
-		createChat(message, username, "response")
+		createChat(message, username, "response", keywords)
 	}
 	
 	autoscroll() 
@@ -71,8 +103,6 @@ socket.on('message', (message, username, roomname) => {
 	}
 	
 })
-
-
 
 socket.on('roomData', ({roomname, users}) => {
 	const html = Mustache.render(sidebarTemplate, {

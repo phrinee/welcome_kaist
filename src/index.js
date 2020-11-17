@@ -8,7 +8,7 @@ const {generateMessage} = require('./utils/messages.js')
 const {addUser, removeUser, getUser, getUsersInRoom} = require('./utils/users.js')
 const {PythonShell} = require('python-shell')
 const { v4: uuidv4 } = require('uuid');
-
+const extractor = require('./utils/keyword.js')
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
@@ -45,9 +45,15 @@ io.on('connection', (socket) => {
 		if (filter.isProfane(message)) {
 			return callback('Bad words are not allowed')
 		}
-
-		io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname)
-		callback()
+		pending = extractor.keyword([message])
+		pending.then(res => {
+			keywords = []
+			for (i = 0; i < res.body[0]["extractions"].length; i++) {
+				keywords.push(res.body[0]["extractions"][i]["parsed_value"])
+			}
+			io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname, keywords)
+			callback()
+		})
 	})
 
 	socket.on('join', (options,  callback) => {
@@ -76,7 +82,7 @@ io.on('connection', (socket) => {
 		var pyshell = new PythonShell(myPythonScriptPath)
 		pyshell.send(JSON.stringify(options.message));
 		pyshell.on('message', function (message) {
-			io.to(options.roomname).emit('message', generateMessage(message), 'chatbot', options.roomname)
+			io.to(options.roomname).emit('message', generateMessage(message), 'chatbot', options.roomname, [])
 		});
 		pyshell.end(function (err) {
 			if (err){

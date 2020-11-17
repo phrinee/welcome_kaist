@@ -195,3 +195,7 @@ button:disabled {
 #sidebar-template {
     width: 40vw;
 }
+
+.popup_span{
+    color: blue;
+}
