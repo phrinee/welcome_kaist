@@ -33,6 +33,21 @@ const autoscroll = () => {
 
 }
 
+const createChatBubble = () => {
+	var chatBubble = document.createElement("div")
+	chatBubble.className += "chat-bubble"
+	chatBubble.id = "chatBubble"
+	var typing = document.createElement("div")
+	typing.className += "typing"
+	for (var i = 0; i<3; i++) {
+		var dot = document.createElement("div")
+		dot.className += "dot"
+		typing.appendChild(dot)
+	}
+	chatBubble.appendChild(typing)
+	return chatBubble
+}
+
 const createChat = (message, username, id, keywords) => {
 	var div = document.createElement("div")
 		div.className += "message" 
@@ -64,7 +79,6 @@ const createChat = (message, username, id, keywords) => {
 					map.set(match.index,regexp)
 				});
 			}
-			console.log(map)
 			let cur = 0
 			for (var i = 0; i < tmp.length; i++) {
 				if (map.has(cur) == true) {
@@ -81,6 +95,9 @@ const createChat = (message, username, id, keywords) => {
 					break
 				}
 			}
+		}
+		if (document.getElementById("chatBubble") != null ) {
+			document.getElementById("chatBubble").remove()
 		}
 		$messages.appendChild(div)
 }
@@ -100,6 +117,8 @@ socket.on('message', (message, username, roomname, keywords) => {
 				location.href = '/'
 			}
 		})
+		var chatBubble = createChatBubble()
+		$messages.appendChild(chatBubble)
 	}
 	
 })

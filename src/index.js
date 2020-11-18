@@ -73,7 +73,6 @@ io.on('connection', (socket) => {
 		})
 
 		callback()
-		
 
 	})
 
