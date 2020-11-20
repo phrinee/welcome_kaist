@@ -15,6 +15,8 @@ def matchParaAnswer(keyword):
 		if keyword in topKeywords[i]:
 			value = max(topKeywords[i][keyword],value)
 			index = i
+	# print out topic 
+	print(topic[index])
 	return index
 
 def getAnswer(question, paragraph, model, tokenizer):
@@ -30,7 +32,6 @@ def getAnswer(question, paragraph, model, tokenizer):
 	corrected_answer = ''
 
 	for word in answer.split():
-   	#If it's a subword token
 		if word[0:2] == '##':
 			corrected_answer += word[2:]
 		else:
@@ -41,8 +42,6 @@ def getAnswer(question, paragraph, model, tokenizer):
 	corrected_answer = corrected_answer.replace(" - ", "-")
 	return corrected_answer
 
-# answer = getAnswer(question, paragraph, model, tokenizer)
-# print(answer)
 def Answer(question, keyword):
 	# find the paragraph contain the answer
 	keyword = keyword.lower()
@@ -59,8 +58,9 @@ def Answer(question, keyword):
 		# paragraph[:100] used when we do not have a great computer
 		answer = getAnswer(question, paragraph[:100], model, tokenizer)
 		# answer = getAnswer(question, paragraph model, tokenizer)
-		print("----------------------ANSWER------------------")
+		print("------------------ANSWER------------------")
 		print(answer)
+
 if __name__ == "__main__":
 	# Model
 	model = BertForQuestionAnswering.from_pretrained('bert-large-uncased-whole-word-masking-finetuned-squad')
@@ -70,10 +70,12 @@ if __name__ == "__main__":
 	# inp = input()
 	# question = json.loads(inp)["text"]
 
-	# Example
+	# Example, pass user question here
 	question = "How much is application fee?"
 	keyword = "contact"
 
+	# Give the result to user 
+	# need to update to show them 
 	Answer(question,keyword)
 	
 
