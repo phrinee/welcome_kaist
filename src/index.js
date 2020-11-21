@@ -15,7 +15,7 @@ const io = socketio(server)
 
 const port = 8080
 const publicDirPath = path.join(__dirname, '../public')
-const modelPath = path.join(__dirname, '/utils/bertQA.py')
+const modelPath = path.join(__dirname, '/utils/BERT.py')
 const partialsPath = path.join(__dirname, '../templates/partials')
 
 app.use(express.static(publicDirPath))
@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
 	socket.on('new_message', (options, callback) => {
 		var myPythonScriptPath = modelPath
 		var pyshell = new PythonShell(myPythonScriptPath)
-		pyshell.send(JSON.stringify(options.message));
+		pyshell.send(JSON.stringify({text: options.message.text, keyword : options.keywords[0]}));
 		pyshell.on('message', function (message) {
 			io.to(options.roomname).emit('message', generateMessage(message), 'chatbot', options.roomname, [])
 		});

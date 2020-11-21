@@ -125,7 +125,7 @@ button:disabled {
 }
 
 .message__meta {
-    margin-left: 20vw;
+    margin-left: 18vw;
     font-size: 14px;
 }
 
@@ -184,16 +184,20 @@ button:disabled {
 
 #request {
     background-color: rgb(74, 134, 232);
+    border-color: black;
+    border-width: 2px;
     border-radius: 0.5vw;
     padding: 0.5vw;
     padding-left: 1vw;
     color: white;
-    margin-left: 45vw;
+    margin-left: 40vw;
     width: 30vw;
 }
 
 #response {
     background-color: #c4c4c4;
+    border-color: black;
+    border-width: 2px;
     border-radius: 0.5vw;
     padding: 0.5vw;
     padding-left: 1vw;

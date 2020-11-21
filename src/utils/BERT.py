@@ -3,20 +3,22 @@ import pandas as pd
 from transformers import BertForQuestionAnswering
 from transformers import BertTokenizer
 import json
-
+import os 
+d = os.getcwd()
 def matchParaAnswer(keyword):
-	topic = ['contact','application timeline','application process','application fee','selection process',
+	topic = ['contact','application timeline','application process','application fees','selection process',
 			 'required document', 'kaist']
-	with open('topKeywords.json') as f:
+	with open(d + '/src/utils/topKeywords.json') as f:
 		topKeywords = json.load(f)
 	value = 0
 	index = -1
+	# print(topKeywords)
 	for i in range(len(topKeywords)):
 		if keyword in topKeywords[i]:
 			value = max(topKeywords[i][keyword],value)
 			index = i
 	# print out topic 
-	print(topic[index])
+	# print(topic[index])
 	return index
 
 def getAnswer(question, paragraph, model, tokenizer):
@@ -50,15 +52,12 @@ def Answer(question, keyword):
 		print("Cannot find the answer! Please contact us")
 	else:
 		# load data
-		data = pd.read_csv("data.csv")
+		data = pd.read_csv(d + "/src/utils/data.csv")
 		# retrieve the paragraph contains answer
 		paragraph = data.iloc[indexPara]['DETAIL']
-		print("--------------FULL INFORMATION-----------------")
-		print(paragraph)
 		# paragraph[:100] used when we do not have a great computer
 		answer = getAnswer(question, paragraph[:100], model, tokenizer)
 		# answer = getAnswer(question, paragraph model, tokenizer)
-		print("------------------ANSWER------------------")
 		print(answer)
 
 if __name__ == "__main__":
@@ -71,9 +70,9 @@ if __name__ == "__main__":
 	# question = json.loads(inp)["text"]
 
 	# Example, pass user question here
-	question = "How much is application fee?"
-	keyword = "contact"
-
+	inp = input()
+	question = json.loads(inp)["text"]
+	keyword = json.loads(inp)["keyword"]
 	# Give the result to user 
 	# need to update to show them 
 	Answer(question,keyword)

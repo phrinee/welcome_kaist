@@ -11,7 +11,8 @@ import json
 import collections
 import csv
 # sort values in vector but preserving colums index
-
+import os 
+d = os.getcwd()
 def sort(matrix):
     tuples = zip(matrix.col, matrix.data)
     return sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
@@ -89,12 +90,12 @@ def topImportant(text):
 # print("=====")
 # data.iloc[5]
 if __name__ == "__main__":
-  data = pd.read_csv("data.csv")
+  data = pd.read_csv(d + "/src/utils/data.csv")
   top_result = []
   for i in range(len(data)):
     temp = topImportant(data.iloc[i])
     top_result.append(temp)
-  with open("topKeywords.json","w") as file:
+  with open(d + "/src/utils/topKeywords.json","w") as file:
     json.dump(top_result,file)
 
 

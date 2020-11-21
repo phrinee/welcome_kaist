@@ -68,19 +68,17 @@ const createChat = (message, username, id, keywords) => {
 			div.appendChild(mess)
 		} else {
 			div.appendChild(p)
-			tmp = message.text.toLowerCase()
+			str = message.text.toLowerCase()
 			map = new Map()
 			for (var i = 0; i < keywords.length; i++) {
 				let regexp = keywords[i]
-				let str = tmp
-
 				let matches = [...str.matchAll(regexp)];
 				matches.forEach((match) => {
 					map.set(match.index,regexp)
 				});
 			}
 			let cur = 0
-			for (var i = 0; i < tmp.length; i++) {
+			for (var i = 0; i < str.length; i++) {
 				if (map.has(cur) == true) {
 					var span = document.createElement('span');
 					span.innerHTML = message.text.substring(cur, map.get(cur).length+cur)
@@ -111,7 +109,7 @@ socket.on('message', (message, username, roomname, keywords) => {
 	
 	autoscroll() 
 	if (username != 'chatbot') {
-		socket.emit('new_message', {message, roomname}, (error) => {
+		socket.emit('new_message', {message, roomname, keywords}, (error) => {
 			if (error) {
 				alert(error)
 				location.href = '/'
@@ -144,6 +142,7 @@ $messageForm.addEventListener('submit', (e) => {
 		}
 		console.log('The message was delivered');
 	})
+
 })
 
 socket.emit('join', {username}, (error) => {
