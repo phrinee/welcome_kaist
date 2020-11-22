@@ -12,7 +12,7 @@ const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
-const port = 8080
+const port = process.env.PORT
 const publicDirPath = path.join(__dirname, '../public')
 const partialsPath = path.join(__dirname, '../templates/partials')
 const {answer} = require('./utils/answer.js')
