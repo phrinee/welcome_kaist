@@ -6,18 +6,16 @@ const socketio = require('socket.io')
 const Filter = require('bad-words')
 const {generateMessage} = require('./utils/messages.js') 
 const {addUser, removeUser, getUser, getUsersInRoom} = require('./utils/users.js')
-const {PythonShell} = require('python-shell')
 const { v4: uuidv4 } = require('uuid');
 const extractor = require('./utils/keyword.js')
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
-const port = process.env.PORT
+const port = 8080
 const publicDirPath = path.join(__dirname, '../public')
-const modelPath = path.join(__dirname, '/utils/BERT.py')
 const partialsPath = path.join(__dirname, '../templates/partials')
-
+const {answer} = require('./utils/answer.js')
 app.use(express.static(publicDirPath))
 // app.set('views', viewPath)
 // app.set('view engine', 'hbs')
@@ -76,17 +74,12 @@ io.on('connection', (socket) => {
 
 	})
 
-	socket.on('new_message', (options, callback) => {
-		var myPythonScriptPath = modelPath
-		var pyshell = new PythonShell(myPythonScriptPath)
-		pyshell.send(JSON.stringify({text: options.message.text, keyword : options.keywords[0]}));
-		pyshell.on('message', function (message) {
-			io.to(options.roomname).emit('message', generateMessage(message), 'chatbot', options.roomname, [])
-		});
-		pyshell.end(function (err) {
-			if (err){
-				throw err;
-			};
+	socket.on('new_message', (options) => {
+		const res = answer(options.message.text, options.keywords[0])
+		res.then((response) => {
+			io.to(options.roomname).emit('message', generateMessage(response.data['response']), 'chatbot', options.roomname, [])
+		}, (error) => {
+			console.log(error);
 		});
 	})
 
