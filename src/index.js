@@ -12,14 +12,12 @@ const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
-const port = process.env.PORT
+const port = 8080
 const publicDirPath = path.join(__dirname, '../public')
-const partialsPath = path.join(__dirname, '../templates/partials')
 const {answer} = require('./utils/answer.js')
 app.use(express.static(publicDirPath))
 // app.set('views', viewPath)
 // app.set('view engine', 'hbs')
-hbs.registerPartials(partialsPath)
 
 
 // app.get('', (req, res) => {
@@ -28,12 +26,9 @@ hbs.registerPartials(partialsPath)
 // 	})
 // })
 
-
-
 io.on('connection', (socket) => {
-	console.log('new web socket connection')
-	
-
+	var inactiveTimer;
+	var logoffTimer;
 	socket.on('sendMessage', (message, callback) => {
 		const {error, user} = getUser(socket.id)
 		if (error) {
@@ -52,6 +47,8 @@ io.on('connection', (socket) => {
 			io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname, keywords)
 			callback()
 		})
+		clearTimeout(inactiveTimer)
+		clearTimeout(logoffTimer)
 	})
 
 	socket.on('join', (options,  callback) => {
@@ -63,24 +60,39 @@ io.on('connection', (socket) => {
 		}
 		socket.join(user.roomname)
 		socket.emit('message', generateMessage('Welcome to the app'), 'chatbot')
-		socket.broadcast.to(user.roomname).emit('message', generateMessage(`${user.username} has joined this room`), 'Chat App')
-		
+		inactiveTimer = setTimeout(function(){
+            io.to(user.roomname).emit('message', generateMessage('Do you have any questions?'), 'chatbot', options.roomname, [])
+        }, 60000);
 		io.to(user.roomname).emit('roomData', {
 			roomname: user.roomname,
 			users: getUsersInRoom(user.roomname)
 		})
+		logoffTimer = setTimeout(function(){
+            io.to(user.roomname).emit('logoff')
+		}, 60000*5);
 
 		callback()
 
 	})
 
 	socket.on('new_message', (options) => {
-		const res = answer(options.message.text, options.keywords[0])
+		var res
+		if (options.keywords.length > 0) {
+			res = answer(options.message.text, options.keywords[0])
+		} else {
+			res = answer(options.message.text, '')
+		}
 		res.then((response) => {
 			io.to(options.roomname).emit('message', generateMessage(response.data['response']), 'chatbot', options.roomname, [])
 		}, (error) => {
 			console.log(error);
 		});
+		inactiveTimer = setTimeout(function(){
+            io.to(options.roomname).emit('message', generateMessage('Do you have any questions?'), 'chatbot', options.roomname, [])
+		}, 60000);
+		logoffTimer = setTimeout(function(){
+            io.to(options.roomname).emit('logoff')
+		}, 60000*5);
 	})
 
 	socket.on('disconnect', () => {

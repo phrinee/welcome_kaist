@@ -12,7 +12,6 @@ const messageTemplate = document.querySelector('#message-template').innerHTML
 const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
 const $request = document.querySelector("#request")
 const $response = document.querySelector("#response")
-
 //Options
 const { username} = Qs.parse(location.search, { ignoreQueryPrefix: true })
 
@@ -132,6 +131,12 @@ socket.on('roomData', ({roomname, users}) => {
 $messageForm.addEventListener('submit', (e) => {
 	e.preventDefault()
 	$messageSendButton.setAttribute('disabled', 'disabled')
+	ch = ["what", "why", "how", "which", "when", "?"]
+	question = $messageBox.value
+	if (question.toLowerCase().split(" ").inclu)
+	questions = JSON.parse(sessionStorage.getItem("questions"));
+	questions.push($messageBox.value)
+	sessionStorage.setItem("questions", JSON.stringify(questions))
 	socket.emit('sendMessage', $messageBox.value, (error) => {
 		$messageSendButton.removeAttribute('disabled')
 		$messageBox.value = ''
@@ -150,4 +155,10 @@ socket.emit('join', {username}, (error) => {
 		alert(error)
 		location.href = '/'
 	}
-}) 
+	sessionStorage.setItem("questions", JSON.stringify([]))
+})
+
+socket.on('logoff', () => {
+	location.href = '/rating.html'
+})
+
