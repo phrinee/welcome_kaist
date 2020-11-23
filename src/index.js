@@ -1,7 +1,6 @@
 const express = require('express')
 const http = require('http')
 const path = require('path')
-const hbs = require('hbs')
 const socketio = require('socket.io')
 const Filter = require('bad-words')
 const {generateMessage} = require('./utils/messages.js') 
@@ -10,11 +9,13 @@ const { v4: uuidv4 } = require('uuid');
 const extractor = require('./utils/keyword.js')
 const app = express()
 const server = http.createServer(app)
+const {PythonShell} = require('python-shell')
 const io = socketio(server)
 
-const port = 8080
+const port = process.env.PORT
 const publicDirPath = path.join(__dirname, '../public')
-const {answer} = require('./utils/answer.js')
+const BERTPath = path.join(__dirname, '/model/BERT.py')
+const detectQuestion = path.join(__dirname, '/model/detectQuestion.py')
 app.use(express.static(publicDirPath))
 // app.set('views', viewPath)
 // app.set('view engine', 'hbs')
@@ -38,6 +39,23 @@ io.on('connection', (socket) => {
 		if (filter.isProfane(message)) {
 			return callback('Bad words are not allowed')
 		}
+		clearTimeout(inactiveTimer)
+		clearTimeout(logoffTimer)
+		// var myPythonScriptPath = detectQuestion
+		// var pyshell = new PythonShell(myPythonScriptPath)
+		// pyshell.send(JSON.stringify({message: message}));
+		// pyshell.on('message', function (data) {
+		// 	if (data.toLowerCase().includes('question')) {
+				
+		// 	} else {
+		// 		io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname, [])
+		// 	}
+		// });
+		// pyshell.end(function (err) {
+		// 	if (err){
+		// 		throw err;
+		// 	};
+		// })	
 		pending = extractor.keyword([message])
 		pending.then(res => {
 			keywords = []
@@ -46,9 +64,7 @@ io.on('connection', (socket) => {
 			}
 			io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname, keywords)
 			callback()
-		})
-		clearTimeout(inactiveTimer)
-		clearTimeout(logoffTimer)
+		})	
 	})
 
 	socket.on('join', (options,  callback) => {
@@ -76,17 +92,33 @@ io.on('connection', (socket) => {
 	})
 
 	socket.on('new_message', (options) => {
-		var res
+		// var res
+		// if (options.keywords.length > 0) {
+		// 	res = answer(options.message.text, options.keywords[0])
+		// } else {
+		// 	res = answer(options.message.text, '')
+		// }
+		// res.then((response) => {
+		// 	io.to(options.roomname).emit('message', generateMessage(response.data['response']), 'chatbot', options.roomname, [])
+		// }, (error) => {
+		// 	console.log(error);
+		// });
+		var myPythonScriptPath = BERTPath
+		var pyshell = new PythonShell(myPythonScriptPath)
 		if (options.keywords.length > 0) {
-			res = answer(options.message.text, options.keywords[0])
+			pyshell.send(JSON.stringify({question: options.message.text, keyword: options.keywords[0]}));
 		} else {
-			res = answer(options.message.text, '')
+			pyshell.send(JSON.stringify({question: options.message.text, keyword: ''}));
 		}
-		res.then((response) => {
-			io.to(options.roomname).emit('message', generateMessage(response.data['response']), 'chatbot', options.roomname, [])
-		}, (error) => {
-			console.log(error);
+		
+		pyshell.on('message', function (message) {
+			io.to(options.roomname).emit('message', generateMessage(message), 'chatbot', options.roomname)
 		});
+		pyshell.end(function (err) {
+			if (err){
+				throw err;
+			};
+		})
 		inactiveTimer = setTimeout(function(){
             io.to(options.roomname).emit('message', generateMessage('Do you have any questions?'), 'chatbot', options.roomname, [])
 		}, 60000);

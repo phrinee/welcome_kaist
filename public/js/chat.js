@@ -131,15 +131,13 @@ socket.on('roomData', ({roomname, users}) => {
 $messageForm.addEventListener('submit', (e) => {
 	e.preventDefault()
 	$messageSendButton.setAttribute('disabled', 'disabled')
-	ch = ["what", "why", "how", "which", "when", "?"]
 	question = $messageBox.value
-	if (question.toLowerCase().split(" ").inclu)
 	questions = JSON.parse(sessionStorage.getItem("questions"));
-	questions.push($messageBox.value)
+	questions.push(question)
 	sessionStorage.setItem("questions", JSON.stringify(questions))
 	socket.emit('sendMessage', $messageBox.value, (error) => {
-		$messageSendButton.removeAttribute('disabled')
 		$messageBox.value = ''
+		$messageSendButton.removeAttribute('disabled')
 		$messageBox.focus()
 		if (error) {
 			alert(error)
