@@ -164,6 +164,6 @@ socket.emit('join', {username}, (error) => {
 socket.on('logoff', () => {
 	setTimeout(function () {
 		location.href = '/rating.html'
-	}, 4000)
+	}, 2000)
 })
 
