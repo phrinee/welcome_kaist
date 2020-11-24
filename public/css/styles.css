@@ -24,6 +24,14 @@ h1 {
     margin-bottom: 16px;
 }
 
+#main-head {
+  font-family: 'Kaushan Script', cursive;
+  font-size:4em;
+  letter-spacing:3px;
+  color:#5892FF ;
+  margin:0;
+  margin-bottom:20px;
+}
 label {
     display: block;
     font-size: 14px;
@@ -41,7 +49,7 @@ button {
     width: 10vw;
     cursor: pointer;
     padding: 12px;
-    background: #7C5CBF;
+    background: #5892FF;
     border: none;
     color: white;
     font-size: 16px;
@@ -54,7 +62,7 @@ button:hover {
 
 button:disabled {
     cursor: default;
-    background: #7c5cbf94;
+    background: #5892FF94;
 }
 
 /* Join Page Styles */
@@ -415,6 +423,13 @@ button:disabled {
 #rating-3:checked ~ .emoji-wrapper > .emoji { transform: translateY(-300px); }
 #rating-4:checked ~ .emoji-wrapper > .emoji { transform: translateY(-400px); }
 #rating-5:checked ~ .emoji-wrapper > .emoji { transform: translateY(-500px); }
+
+
+#rating-title {
+  text-align: center;
+  align-items: center;
+  margin-top: 0vw;
+}
 
 .feedback {
   max-width: 360px;

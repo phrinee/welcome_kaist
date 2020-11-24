@@ -12,6 +12,8 @@ const messageTemplate = document.querySelector('#message-template').innerHTML
 const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
 const $request = document.querySelector("#request")
 const $response = document.querySelector("#response")
+
+var timeout = false;
 //Options
 const { username} = Qs.parse(location.search, { ignoreQueryPrefix: true })
 
@@ -102,12 +104,16 @@ const createChat = (message, username, id, keywords) => {
 socket.on('message', (message, username, roomname, keywords) => {
 	if (username != 'chatbot') {
 		createChat(message, username, "request", keywords)
+		if (message.text.toLowerCase().includes('goodbye')) {
+			socket.emit('endsession', roomname)
+		}
 	} else {
 		createChat(message, username, "response", keywords)
 	}
 	
 	autoscroll() 
-	if (username != 'chatbot') {
+	if (username != 'chatbot' && message.text.toLowerCase().includes('goodbye') == false) {
+		console.log(message.text.toLowerCase().includes('goodbye') )
 		socket.emit('new_message', {message, roomname, keywords}, (error) => {
 			if (error) {
 				alert(error)
@@ -132,20 +138,19 @@ $messageForm.addEventListener('submit', (e) => {
 	e.preventDefault()
 	$messageSendButton.setAttribute('disabled', 'disabled')
 	question = $messageBox.value
+	$messageSendButton.removeAttribute('disabled')
+	$messageBox.focus()
 	questions = JSON.parse(sessionStorage.getItem("questions"));
 	questions.push(question)
 	sessionStorage.setItem("questions", JSON.stringify(questions))
-	socket.emit('sendMessage', $messageBox.value, (error) => {
-		$messageBox.value = ''
-		$messageSendButton.removeAttribute('disabled')
-		$messageBox.focus()
+	socket.emit('sendMessage', question, (error) => {
 		if (error) {
 			alert(error)
 			location.href = '/'
 		}
 		console.log('The message was delivered');
 	})
-
+	$messageBox.value = ''
 })
 
 socket.emit('join', {username}, (error) => {
@@ -157,6 +162,8 @@ socket.emit('join', {username}, (error) => {
 })
 
 socket.on('logoff', () => {
-	location.href = '/rating.html'
+	setTimeout(function () {
+		location.href = '/rating.html'
+	}, 4000)
 })
 

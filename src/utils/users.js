@@ -4,7 +4,11 @@ const users = []
 const addUser = ({id, username, roomname}) => {
 	username = username.trim().toLowerCase()
 	roomname = roomname.trim().toLowerCase()
-	console.log(roomname);
+	if (username == 'chatbot') {
+		return {
+			error: 'Please choose another name!'
+		}
+	}  
 	if (!username || !roomname) {
 		return {
 			error: 'Username and Room are required'
