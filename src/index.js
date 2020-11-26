@@ -12,13 +12,12 @@ const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
-const port = 8080
+const port = process.env.PORT
 const publicDirPath = path.join(__dirname, '../public')
 const {answer} = require('./utils/answer.js')
 const admin = require("firebase-admin");
 
 const serviceAccount = require("./secret/cs492-humanai-firebase-adminsdk-kkgey-873a0925fc.json");
-const { info } = require('console')
 const refName = '/statistics' 
 
 admin.initializeApp({
