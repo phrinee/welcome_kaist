@@ -4,6 +4,8 @@
 		<title>Welcome_kaist</title>
 		<link rel="icon" href="/img/favicon.png">
 		<link rel="stylesheet" href="/css/styles.css">
+		<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+
 	</head>
 	<body>
 		<div class="chat">
@@ -11,24 +13,36 @@
 				
 			</div>
 			<div class="chat__main">
-				<div id="messages" class="chat__messages"></div>
+				<div id="messages" class="chat__messages">
+				</div>
 				<div class="compose">
 					<form id="message-form">
 						<input id="message-box" placeholder="Send Message" required autocomplete="off">
 						<button id="send-message">Send</button>
 					</form>
 				</div>
-				
 			</div>
 		</div>
 		
-		<script id="message-template" type="text/html">
-			<div class="message">
+		<script id="message-template-request" type="text/html">
+			<div class="message" id="request">
 				<p>
 					<span class="message__name">{{username}}</span>
 					<span class="message__meta">{{createdAt}}</span>
 				</p>
 				<p>{{message}}</p>
+			</div>
+		</script>
+		<script id="message-template-response" type="text/html">
+			<div class="message" id="response">
+				<p>
+					<span class="message__name">{{username}}</span>
+					<span class="message__meta">{{createdAt}}</span>
+				</p>
+				<p>{{message}}</p>
+				<div class="icon-wrapper">
+					<span class="unlike" onclick=""><i class="fas fa-star"></i></span>
+				</div>
 			</div>
 		</script>
 

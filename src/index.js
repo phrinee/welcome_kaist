@@ -5,17 +5,27 @@ const socketio = require('socket.io')
 const Filter = require('bad-words')
 const {generateMessage} = require('./utils/messages.js') 
 const {addUser, removeUser, getUser, getUsersInRoom} = require('./utils/users.js')
+const {addClient, handleQuestion, getClient} = require('./utils/questions.js')
 const { v4: uuidv4 } = require('uuid');
 const extractor = require('./utils/keyword.js')
-const {PythonShell} = require('python-shell')
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
 
-const port = process.env.PORT
+const port = 8080
 const publicDirPath = path.join(__dirname, '../public')
-const detectQuestion = path.join(__dirname, './model/detectQuestion.py')
 const {answer} = require('./utils/answer.js')
+const admin = require("firebase-admin");
+
+const serviceAccount = require("./secret/cs492-humanai-firebase-adminsdk-kkgey-873a0925fc.json");
+const { info } = require('console')
+const refName = '/statistics' 
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://cs492-humanai.firebaseio.com"
+});
+
 app.use(express.static(publicDirPath))
 // app.set('views', viewPath)
 // app.set('view engine', 'hbs')
@@ -47,22 +57,22 @@ io.on('connection', (socket) => {
 			for (i = 0; i < res.body[0]["extractions"].length; i++) {
 				keywords.push(res.body[0]["extractions"][i]["parsed_value"])
 			}
-			io.to(user.roomname).emit('message', generateMessage(message), user.username, user.roomname, keywords)
+			io.to(user.roomname).emit('message', generateMessage(message, ''), user.username, user.roomname, keywords)
 		})	
 	})
 
 	socket.on('join', (options,  callback) => {
 
 		const {error, user} = addUser({id:socket.id, username:options.username, roomname:uuidv4().toString()})
-
+		addClient(user.roomname)
 		if (error) {
 			return callback(error)
 		}
 		socket.join(user.roomname)
-		socket.emit('message', generateMessage('Welcome to the app'), 'chatbot')
+		socket.emit('message', generateMessage('','Welcome to the app'), 'admin')
 		inactiveTimer = setTimeout(function(){
-            io.to(user.roomname).emit('message', generateMessage('Do you have any questions?'), 'chatbot', options.roomname, [])
-        }, 60000);
+            io.to(user.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), 'admin', options.roomname, [])
+        }, 60000*2);
 		io.to(user.roomname).emit('roomData', {
 			roomname: user.roomname,
 			users: getUsersInRoom(user.roomname)
@@ -78,33 +88,60 @@ io.on('connection', (socket) => {
 	socket.on('new_message', (options) => {
 		var res;
 		if (options.keywords.length > 0) {
-			res = answer(options.message.text, options.keywords[0])
+			res = answer(options.message.question, options.keywords[0])
 		} else {
-			res = answer(options.message.text, '')
+			res = answer(options.message.question, '')
 		}
 		res.then((response) => {
-			io.to(options.roomname).emit('message', generateMessage(response.data['response']), 'chatbot', options.roomname, [])
+			io.to(options.roomname).emit('message', generateMessage(options.message.question, response.data['response']), 'chatbot', options.roomname, [])
+			var db = admin.database();
+			var ref = db.ref(refName).child(options.message.question.toLowerCase());
+			ref.on("value", function(snapshot) {
+				var info;
+				if (snapshot.val() && snapshot.val() > 1) {
+					info = 'There are currently ' +  snapshot.val() + ' people upvote for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
+				} else if (snapshot.val() == 1){
+					info = 'There is currently' +  snapshot.val() + 'person upvote for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
+				} else {
+					info = 'No one upvote for this answer yet. If you found it helpful, please help us upvote it. We will appreciate your help.'
+				}
+				io.to(options.roomname).emit('message', generateMessage('', info), 'admin', options.roomname, [])
+			}, function (errorObject) {
+				console.log("The read failed: " + errorObject.code);
+			});
 		}, (error) => {
 			console.log(error);
 		});
+		
 		inactiveTimer = setTimeout(function(){
-            io.to(options.roomname).emit('message', generateMessage('Do you have any questions? If not please simply say Goodbye'), 'chatbot', options.roomname, [])
+            io.to(options.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), 'admin', options.roomname, [])
 		}, 60000);
 		logoffTimer = setTimeout(function(){
             io.to(options.roomname).emit('logoff')
 		}, 60000*5);
 	})
 
+	socket.on('vote', (id, question, b) => {
+		tmp = question.toLowerCase()
+		handleQuestion(id, tmp, b)
+	})
+
 	socket.on('disconnect', () => {
 		const user = removeUser(socket.id)
-		console.log(user);
 		if (user) {
-			io.to(user.roomname).emit('message', generateMessage(`${user.username} left the chat room`), 'Chat App')
-			io.to(user.roomname).emit('roomData', {
-				roomname: user.roomname,
-				users: getUsersInRoom(user.roomname)
-			})
+			tmp = getClient(user.roomname)
+			var db = admin.database();
+			var ref = db.ref(refName);
+			for (let [key, value] of tmp) {
+				if (value == 1) {
+					ref.child(key).transaction(function (currentData) {
+						return (currentData || 0) + 1
+					})
+				}
+			}
 		}
+		
+		
 	})
 	socket.on('endsession', (roomname) => {
 		io.to(roomname).emit('logoff')

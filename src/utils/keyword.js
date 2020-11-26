@@ -1,6 +1,6 @@
 const MonkeyLearn = require('monkeylearn')
 
-const ml = new MonkeyLearn('2c5054c93ca0981de34c65d2d4c17a88251e6924')
+const ml = new MonkeyLearn('eb501d24660013f970ac3464b1588c822b1b5a71')
 let model_id = 'ex_YCya9nrn'
 
 const keyword = (data) => {
