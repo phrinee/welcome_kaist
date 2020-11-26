@@ -98,11 +98,11 @@ io.on('connection', (socket) => {
 			ref.on("value", function(snapshot) {
 				var info;
 				if (snapshot.val() && snapshot.val() > 1) {
-					info = 'There are currently ' +  snapshot.val() + ' people upvote for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
+					info = 'There are ' +  snapshot.val() + ' people upvoted for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
 				} else if (snapshot.val() == 1){
-					info = 'There is currently' +  snapshot.val() + 'person upvote for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
+					info = 'There is ' +  snapshot.val() + 'person upvoted for this answer. If you found it helpful, please help us upvote it. We will appreciate your help.'
 				} else {
-					info = 'No one upvote for this answer yet. If you found it helpful, please help us upvote it. We will appreciate your help.'
+					info = 'No one upvoted for this answer yet. If you found it helpful, please help us upvote it. We will appreciate your help.'
 				}
 				io.to(options.roomname).emit('message', generateMessage('', info), 'admin', options.roomname, [])
 			}, function (errorObject) {
