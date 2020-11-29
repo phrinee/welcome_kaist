@@ -3,7 +3,7 @@ const axios = require('axios')
 const answer = (question, keyword) => {
     const res = axios({
         method: 'post',
-        url: 'https://welcome-kaist-model.herokuapp.com/answer',
+        url: 'http://welcome-kaist-model.herokuapp.com/answer',
         data: {
           question: question,
           keyword: keyword
@@ -12,4 +12,19 @@ const answer = (question, keyword) => {
     return res
 }
 
-module.exports = {answer}
+const boostFlaskServer = () => {
+  const res = axios({
+      method: 'post',
+      url: 'https://welcome-kaist-model.herokuapp.com/answer',
+      data: {
+        question: "Hello",
+        keyword: ''
+      }
+    })
+  return res
+}
+
+module.exports = {
+  answer,
+  boostFlaskServer
+}

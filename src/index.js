@@ -14,7 +14,7 @@ const io = socketio(server)
 
 const port = process.env.PORT
 const publicDirPath = path.join(__dirname, '../public')
-const {answer} = require('./utils/answer.js')
+const {answer, boostFlaskServer} = require('./utils/answer.js')
 const admin = require("firebase-admin");
 
 const serviceAccount = require("./secret/cs492-humanai-firebase-adminsdk-kkgey-873a0925fc.json");
@@ -56,21 +56,21 @@ io.on('connection', (socket) => {
 			for (i = 0; i < res.body[0]["extractions"].length; i++) {
 				keywords.push(res.body[0]["extractions"][i]["parsed_value"])
 			}
-			io.to(user.roomname).emit('message', generateMessage(message, ''), user.username, user.roomname, keywords)
+			io.to(user.roomname).emit('message', generateMessage(message, ''), {}, user.username, user.roomname, keywords)
 		})	
 	})
 
 	socket.on('join', (options,  callback) => {
-
+		boostFlaskServer()
 		const {error, user} = addUser({id:socket.id, username:options.username, roomname:uuidv4().toString()})
 		addClient(user.roomname)
 		if (error) {
 			return callback(error)
 		}
 		socket.join(user.roomname)
-		socket.emit('message', generateMessage('','Welcome to the app'), 'admin')
+		socket.emit('message', generateMessage('','Welcome to the app'),{}, 'admin')
 		inactiveTimer = setTimeout(function(){
-            io.to(user.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), 'admin', options.roomname, [])
+            io.to(user.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), {}, 'admin', options.roomname, [])
         }, 60000*2);
 		io.to(user.roomname).emit('roomData', {
 			roomname: user.roomname,
@@ -87,12 +87,12 @@ io.on('connection', (socket) => {
 	socket.on('new_message', (options) => {
 		var res;
 		if (options.keywords.length > 0) {
-			res = answer(options.message.question, options.keywords[0])
+			res = answer(options.message.question, options.keywords.join(' '))
 		} else {
 			res = answer(options.message.question, '')
 		}
 		res.then((response) => {
-			io.to(options.roomname).emit('message', generateMessage(options.message.question, response.data['response']), 'chatbot', options.roomname, [])
+			io.to(options.roomname).emit('message', generateMessage(options.message.question, response.data['response']), response.data['info'], 'chatbot', options.roomname, [])
 			var db = admin.database();
 			var ref = db.ref(refName).child(options.message.question.toLowerCase());
 			ref.on("value", function(snapshot) {
@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
 				} else {
 					info = 'No one upvoted for this answer yet. If you found it helpful, please help us upvote it. We will appreciate your help.'
 				}
-				io.to(options.roomname).emit('message', generateMessage('', info), 'admin', options.roomname, [])
+				io.to(options.roomname).emit('message', generateMessage('', info), {}, 'admin', options.roomname, [])
 			}, function (errorObject) {
 				console.log("The read failed: " + errorObject.code);
 			});
@@ -113,8 +113,8 @@ io.on('connection', (socket) => {
 		});
 		
 		inactiveTimer = setTimeout(function(){
-            io.to(options.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), 'admin', options.roomname, [])
-		}, 60000);
+            io.to(options.roomname).emit('message', generateMessage('', 'Do you have any questions? If not please simply say Goodbye'), {}, 'admin', options.roomname, [])
+		}, 60000*2);
 		logoffTimer = setTimeout(function(){
             io.to(options.roomname).emit('logoff')
 		}, 60000*5);
@@ -144,6 +144,10 @@ io.on('connection', (socket) => {
 	})
 	socket.on('endsession', (roomname) => {
 		io.to(roomname).emit('logoff')
+	})
+
+	socket.on('keep', () => {
+		console.log('keep')
 	})
 })
 

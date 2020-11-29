@@ -7,12 +7,14 @@ const $messageSendButton = $messageForm.querySelector('#send-message')
 const $sendLocationButton = document.querySelector('#send-location')
 const $messages = document.querySelector('#messages')
 const $sidebar = document.querySelector('#sidebar')
+const $request = document.querySelector("#request")
+const $response = document.querySelector("#response")
+
 //Templates
 const messageTemplateRequest = document.querySelector('#message-template-request').innerHTML
 const messageTemplateResponse = document.querySelector('#message-template-response').innerHTML
 const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML
-const $request = document.querySelector("#request")
-const $response = document.querySelector("#response")
+
 
 var timeout = false;
 //Options
@@ -71,7 +73,8 @@ const createStar = (id, question) => {
 	return holder
 }
 
-const createChat = (message, username, id, keywords, roomname) => {
+const createChat = (message, info, username, id, keywords, roomname) => {
+	keys = Object.keys(info)
 	var div = document.createElement("div")
 	div.className += "message" 
 	div.id = id
@@ -96,7 +99,21 @@ const createChat = (message, username, id, keywords, roomname) => {
 	
 	div.appendChild(p)
 	div.appendChild(mess)
-	
+	if (id == 'response' && username == 'chatbot') {
+		infor = document.createElement("p")
+		infor.innerHTML = "For more information please visit the following links based on topics you want:"
+		div.appendChild(infor)
+	}
+	for (var i=0;i<keys.length;i++) {
+		var container = document.createElement('div')
+		key = keys[i]
+		var a = document.createElement('a')
+		a.target = '_blank'
+		a.href = info[key]
+		a.textContent = key
+		container.appendChild(a)
+		div.appendChild(container)
+	}
 	if (id == 'response' && username == 'chatbot') {
 		var star = createStar(roomname, message.question)
 		div.appendChild(star)
@@ -132,11 +149,11 @@ const createChat = (message, username, id, keywords, roomname) => {
 	$messages.appendChild(div)
 }
 
-socket.on('message', (message, username, roomname, keywords) => {
+socket.on('message', (message, info, username, roomname, keywords) => {
 	if (username == 'chatbot' || username == 'admin') {
-		createChat(message, username, "response", keywords, roomname)
+		createChat(message, info, username, "response", keywords, roomname)
 	} else {
-		createChat(message, username, "request", keywords, roomname)
+		createChat(message, info, username, "request", keywords, roomname)
 		if (message.question.toLowerCase().includes('goodbye')) {
 			socket.emit('endsession', roomname)
 		}
@@ -196,4 +213,9 @@ socket.on('logoff', () => {
 		location.href = '/rating.html'
 	}, 2000)
 })
+
+setInterval(function () {
+	socket.emit('keep')
+}, 60000)
+
 
